@@ -1,0 +1,9 @@
+{
+    "Simulator Target Bundle": "com.example.testPush3",
+    "aps": {
+        "alert": {
+            "title": "通知テストタイトル",
+            "body": "通知テストメッセージ"
+        }
+    }
+}
