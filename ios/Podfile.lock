@@ -1,0 +1,16 @@
+PODS:
+  - HydraAsync (2.0.6)
+
+DEPENDENCIES:
+  - HydraAsync
+
+SPEC REPOS:
+  trunk:
+    - HydraAsync
+
+SPEC CHECKSUMS:
+  HydraAsync: 8d589bd725b0224f899afafc9a396327405f8063
+
+PODFILE CHECKSUM: fb14ae569542f967bed0225c6969dcf3875b988c
+
+COCOAPODS: 1.11.3

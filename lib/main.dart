@@ -9,6 +9,7 @@ class MyApp extends StatelessWidget {
   const MyApp({super.key});
   @override
   Widget build(BuildContext context) {
+    SystemChannels.lifecycle.setMessageHandler(_change);
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
@@ -16,6 +17,12 @@ class MyApp extends StatelessWidget {
       ),
       home: const MyHomePage(title: 'Flutter Demo Home Page'),
     );
+  }
+
+  Future<String?> _change(String? msg) async {
+    if (msg == AppLifecycleState.resumed.toString()) {
+      print("##########");
+    }
   }
 }
 

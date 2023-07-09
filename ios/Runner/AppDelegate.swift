@@ -1,6 +1,7 @@
 import UIKit
 import Flutter
 import UserNotifications
+import Hydra
 
 @available(iOS 14.0, *)
 @UIApplicationMain
@@ -16,22 +17,6 @@ import UserNotifications
             (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
             switch call.method {
             case "startPush":
-                let content = UNMutableNotificationContent()
-                content.title = "通知のタイトルです"
-                content.body = "通知の内容です"
-                
-                let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 2, repeats: false)
-                let request = UNNotificationRequest(identifier: "通知No.1", content: content, trigger: trigger)
-                UNUserNotificationCenter.current().add(request)
-                
-                let content2 = UNMutableNotificationContent()
-                content2.title = "2通知のタイトルです"
-                content2.body = "2通知の内容です"
-                
-                let trigger2 = UNTimeIntervalNotificationTrigger(timeInterval: 2, repeats: false)
-                let request2 = UNNotificationRequest(identifier: "通知No.2", content: content2, trigger: trigger2)
-                UNUserNotificationCenter.current().add(request2)
-                batteryChannel.invokeMethod("callMe", arguments: nil)
                 result(["says"])
             default:
                 result(FlutterMethodNotImplemented)
@@ -43,15 +28,22 @@ import UserNotifications
             options: [.alert, .sound, .badge]){
                 (granted, _) in
                 if granted{
-                    UNUserNotificationCenter.current().delegate = self
+                    UIApplication.shared.registerForRemoteNotifications()
                 }
             }
         
         // 通知処理
+        NSLog("停止から復帰")
         if let notification = launchOptions?[.remoteNotification] as? [String: Any] {
-            NSLog("停止から復帰")
             NSLog(notification.description)
         }
+        
+        do {
+            try Hydra.await(self.getNotifications())
+        } catch {
+            NSLog("エラーです")
+        }
+        
         GeneratedPluginRegistrant.register(with: self)
         return super.application(application, didFinishLaunchingWithOptions: launchOptions)
     }
@@ -60,5 +52,42 @@ import UserNotifications
         NSLog("バックグラウンドタップ時")
         NSLog(response.notification.request.description)
         completionHandler()
+    }
+    
+    // デバイストークンの取得
+    override func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        NSLog("デバイストークンの取得")
+        let token = deviceToken.map { String(format: "%02.2hhx", $0) }.joined()
+        NSLog("デバイストークン: \(token)")
+    }
+    
+    // プッシュ通知の登録失敗時の処理
+    override func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        NSLog("デバイストークンの取得に失敗しました: \(error.localizedDescription)")
+    }
+    
+    // リモート通知を受け取った時の処理
+    override func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any]) {
+        NSLog("リモート通知を受け取りました: \(userInfo)")
+        
+    }
+    
+    private func getNotifications() -> Promise<String> {
+        return Promise<String> { resolve, _ , _ in
+            NSLog("UNUserNotificationCenter")
+            UNUserNotificationCenter.current().getDeliveredNotifications(completionHandler: { notifications in
+                for notification in notifications {
+                    let content = notification.request.content
+                    NSLog(content.title)
+                    NSLog(content.body)
+                    NSLog(content.userInfo.description)
+                    let aps = content.userInfo["aps"] as? [String:Any] ?? ["test": "仮"]
+                    let test = aps["test"] as? String ?? "データなし"
+                    NSLog(test)
+                 }
+                NSLog("exit")
+                resolve("Success")
+            })
+        }
     }
 }
